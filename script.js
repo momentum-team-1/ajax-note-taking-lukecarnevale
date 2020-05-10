@@ -11,22 +11,23 @@ noteForm.addEventListener('submit',function(event){
     let noteTextInput = document.querySelector('#note-text')
     let noteText = noteTextInput.value
     //create the new todo item on the list (in the database)
+    noteTextInput.value = ''
     createNewNote(noteText)
 })
 
 //2. write the fetch request to post data, in its own function 
 function createNewNote (newNote){
- fetch('http://localhost:3000/notes', {
+fetch('http://localhost:3000/notes', {
     method: 'POST',
     headers: {'Content-Type' : 'application/json'},
     body: JSON.stringify({item: noteText, done: false, created: moment().format()})
 })
-.then(response => response.json())
-.then(data => console.log(data))
+.then(() => renderNotes())
 }
 
 //3. render the noteList using the data tha is now on the server
 function renderNotes (){
+    noteList.innerHTML =''
     fetch('http://localhost:3000/notes', {
         method: 'GET'
     })
@@ -36,6 +37,7 @@ function renderNotes (){
         //create the ul
         //create an li for each item
         let list = document.createElement('ul')
+        list.id = 'item-list'
         for (let item of data){
             let listItem = document.createElement('li')
             listItem.dataset.id = item.id
@@ -46,7 +48,6 @@ function renderNotes (){
             listItem.appendChild(deleteIcon)
             list.appendChild(listItem)
         }
-        
         noteList.appendChild(list)
     })
 }
@@ -54,19 +55,21 @@ function renderNotes (){
 //4. Delete todo items
 
 todoList.addEventListener('click', function(event){
-    console.log(event.target)
-    if (event.target.matches('#delete')){
+    let targetEl = event.target
+    if (targetEl.matches('#delete')){
         // console.log('DELETE')-- checking if delete shows up
-        deleteNoteItem()
+        deleteNoteItem(targetEl.parentElement.dataset.id)
     }
 })
 
 function deleteNoteItem (itemId){
+    let itemToDelete = document.querySelector(`li[data-id='${itemId}']`)
     fetch(`http://localhost:3000/notes/${itemId}`,{
     method: 'DELETE'
     })
-    .then(response => response.json())
-    .then(data => console.log(data))
+    .then(function (){
+        document.querySelector('#item-list').removeChild(itemToDelete)
+})
 }
 renderNotes()
 
